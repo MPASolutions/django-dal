@@ -55,7 +55,7 @@ Does the code actually work?
 Contributors
 ------------
 
-Here is a list of Django-Webix's contributors.
+Here is a list of Django-DAL's contributors.
 
 .. image:: https://contributors-img.web.app/image?repo=MPASolutions/django-dal
     :target: https://github.com/MPASolutions/django-dal/graphs/contributors
