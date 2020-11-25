@@ -1,6 +1,6 @@
 from django.db import models
-from django.db.models import Q, ForeignObjectRel
-
+from django.db.models import Q
+from django.db.models.fields.related import ForeignObjectRel
 
 class DALManager(models.Manager):
     def _add_prefix(self, qset, prefix):

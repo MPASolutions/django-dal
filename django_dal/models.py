@@ -11,7 +11,7 @@ if hasattr(models, 'options') and \
 
 
 class DALModel(models.Model):
-    objects = LimitManager()
+    objects = DALManager()
 
     class Meta:
         relations_limit = []
