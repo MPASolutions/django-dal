@@ -1,4 +1,4 @@
-from .params import ContextParam, ContextParams, copa
+from django_dal.params import ContextParam, ContextParams, cxpr
 
 __version__ = '0.1.0'
 

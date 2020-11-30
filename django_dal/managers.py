@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django.db.models.fields.related import ForeignObjectRel
+from inspect import signature
 
 class DALManager(models.Manager):
     def _add_prefix(self, qset, prefix):
@@ -35,7 +36,11 @@ class DALManager(models.Manager):
         return queryset
 
     def all(self, ignore_filters=False):
-        return self.get_queryset(ignore_filters=ignore_filters)
+        sig = signature(self.get_queryset)
+        if sig.parameters.get('ignore_filters', None) is not None:
+            return self.get_queryset(ignore_filters=ignore_filters)
+        else:
+            return self.get_queryset()
 
     def get_filter(self):
         qsets = Q()

@@ -1,4 +1,4 @@
-from contextparams.params import get_context_params
+from django_dal.params import get_context_params
 
 class ContextParamsMiddleware:
 

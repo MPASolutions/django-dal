@@ -30,6 +30,8 @@ class ContextParams:
          self.__dict__['vars'][name].set(value)
 
     def _get_param(self, name):
+        a = self.params
+        b = [i.name for i in self.params]
         for param in self.params:
             if param.name == name:
                 return param
@@ -92,7 +94,7 @@ class ContextParams:
     def run_in_context(*args, **kwargs):
         # set params in context copy
         params = kwargs.pop('__context_params_to_set__')
-        copa.set(params)
+        cxpr.set(params)
         function = kwargs.pop('__callable_to_run__')
         return function(*args, **kwargs)
 
@@ -129,9 +131,12 @@ class ModuleProperty(object):
         # execute function and get its attribute
         return getattr(self.function(), name)
 
+    def __str__(self):
+        return str([(i.name, getattr(self, i.name)) for i in self.params])
+
 
 @ModuleProperty
-def copa():
+def cxpr():
     return get_context_params()
 
 # Context params global instance
@@ -148,5 +153,4 @@ def get_context_params():
             context_params = cls()
         else:
             context_params = ContextParams()
-
     return context_params
