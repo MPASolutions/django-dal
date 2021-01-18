@@ -1,9 +1,15 @@
+from inspect import signature
+
 from django.db import models
 from django.db.models import Q
 from django.db.models.fields.related import ForeignObjectRel
-from inspect import signature
+from django.db.models.manager import BaseManager
 
-class DALManager(models.Manager):
+from django_dal.query import DALQuerySet, DALTreeQuerySet
+from django_dal.utils import check_permission
+from django_dal.mptt_managers import DALTreeManager
+
+class DALManager(BaseManager.from_queryset(DALQuerySet)):
     def _add_prefix(self, qset, prefix):
         # Recursive add prefix
         if isinstance(qset, Q) and hasattr(qset, 'children'):
@@ -30,6 +36,10 @@ class DALManager(models.Manager):
         return model
 
     def get_queryset(self, ignore_filters=False):
+
+        # raise exception if no permission
+        check_permission(self.model, 'view')
+
         queryset = super().get_queryset()
         if ignore_filters is False:
             queryset = queryset.filter(self.get_filter())

@@ -59,6 +59,7 @@ setup(
     author_email='info@mpasol.it',
     install_requires=[
         'Django>=3.0',
+        'django-mptt',
     ],
     classifiers=[
         'Environment :: Web Environment',
