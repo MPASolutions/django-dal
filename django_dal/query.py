@@ -8,13 +8,13 @@ from django_dal.utils import check_permission
 class DALQuerySet(QuerySet):
 
     def update(self, **kwargs):
-        print('update')
+        #print('update')
         # raise exception if no permission
         check_permission(self.model, 'change')
         return super().update(**kwargs)
 
     def delete(self):
-        print('delete')
+        #print('delete')
         # raise exception if no permission
         check_permission(self.model, 'delete')
         return super().delete()
