@@ -8,6 +8,6 @@ def check_permission(model, perm_name):
         if not cxpr.user.has_perm(perm_code):
             raise PermissionDenied(perm_code)
 
-    if cxpr.group is not None:
-        if not cxpr.group.has_perm(perm_code):
-            raise PermissionDenied(perm_code)
+#    if cxpr.group is not None:
+#        if not cxpr.group.has_perm(perm_code):
+#            raise PermissionDenied(perm_code)
