@@ -1,7 +1,4 @@
-from django_dal.utils import check_permission
 from django.db.models.query import QuerySet
-from django.db.models.query import QuerySet
-
 from django_dal.utils import check_permission
 
 

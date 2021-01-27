@@ -3,13 +3,13 @@ from inspect import signature
 from django.db import models
 from django.db.models import Q
 from django.db.models.fields.related import ForeignObjectRel
-from django.db.models.manager import BaseManager
-
+from django.db.models.manager import BaseManager, Manager
+from django_dal.mptt_managers import DALTreeManager
 from django_dal.query import DALQuerySet, DALTreeQuerySet
 from django_dal.utils import check_permission
-from django_dal.mptt_managers import DALTreeManager
 
-class DALManager(BaseManager.from_queryset(DALQuerySet)):
+
+class DALManager(Manager.from_queryset(DALQuerySet)):
     def _add_prefix(self, qset, prefix):
         # Recursive add prefix
         if isinstance(qset, Q) and hasattr(qset, 'children'):
@@ -66,4 +66,3 @@ class DALManager(BaseManager.from_queryset(DALQuerySet)):
                         qsets &= filters
 
         return qsets
-
