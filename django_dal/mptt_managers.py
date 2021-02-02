@@ -68,7 +68,7 @@ def delegate_manager(method):
     """
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
-        if self._base_manager:
+        if hasattr(self,'_base_manager') and self._base_manager:
             return getattr(self._base_manager, method.__name__)(*args, **kwargs)
         return method(self, *args, **kwargs)
     return wrapped
