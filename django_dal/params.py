@@ -87,7 +87,7 @@ class ContextParams:
             return None
         elif len(groups) == 1:
             return groups[0]
-        raise Exception('User {} in more groups: {}'.format(user.name, groups))
+        raise Exception('User {} in more groups: {}'.format(user.username, groups))
 
     # this is run in context copy
     @staticmethod
