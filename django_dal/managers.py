@@ -5,7 +5,8 @@ from django.db.models import Q
 from django.db.models.fields.related import ForeignObjectRel
 from django.db.models.manager import Manager
 
-from django_dal.query import DALQuerySet
+from django_dal.mptt_managers import DALTreeManager
+from django_dal.query import DALQuerySet, DALTreeQuerySet
 from django_dal.utils import check_permission
 
 
