@@ -13,6 +13,10 @@ The format is based on KeepAChangelog_ and this project adheres to SemanticVersi
 [Unreleased]
 ++++++++++++
 
+
+[1.0.0] 2021-03-02
+++++++++++++++++++
+
 Added
 ~~~~~
 * First release on PyPI.

@@ -5,13 +5,11 @@ from django_dal.utils import check_permission
 class DALQuerySet(QuerySet):
 
     def update(self, **kwargs):
-        #print('update')
         # raise exception if no permission
         check_permission(self.model, 'change')
         return super().update(**kwargs)
 
     def delete(self):
-        #print('delete')
         # raise exception if no permission
         check_permission(self.model, 'delete')
         return super().delete()
@@ -33,6 +31,7 @@ class DALTreeQuerySet(DALQuerySet):
         Alias to `mptt.managers.TreeManager.get_queryset_descendants`.
         """
         return self.model._tree_manager.get_queryset_descendants(self, *args, **kwargs)
+
     get_descendants.queryset_only = True
 
     def get_ancestors(self, *args, **kwargs):
@@ -40,6 +39,7 @@ class DALTreeQuerySet(DALQuerySet):
         Alias to `mptt.managers.TreeManager.get_queryset_ancestors`.
         """
         return self.model._tree_manager.get_queryset_ancestors(self, *args, **kwargs)
+
     get_ancestors.queryset_only = True
 
     def get_cached_trees(self):

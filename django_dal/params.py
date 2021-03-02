@@ -1,8 +1,10 @@
 import importlib
 from collections import OrderedDict
 from contextvars import *
+
 from django.conf import settings
 from django.utils.functional import LazyObject
+
 
 class ContextParam:
 
@@ -14,7 +16,6 @@ class ContextParam:
 
 
 class ContextParams:
-
     #: List of ContextParam instances
     params = []
 
@@ -27,7 +28,7 @@ class ContextParams:
         return self.__dict__['vars'][name].get()
 
     def __setattr__(self, name, value):
-         self.__dict__['vars'][name].set(value)
+        self.__dict__['vars'][name].set(value)
 
     def _get_param(self, name):
         a = self.params
@@ -68,7 +69,9 @@ class ContextParams:
             if isinstance(value, LazyObject) and hasattr(value, '_wrapped'):
                 value = value._wrapped
             if value is not None and not isinstance(value, param.type):
-                raise Exception('Trying to set ContextParam {} to value {} of type {} which does not match param type {}'.format(name, value, type(value), param.type))
+                raise Exception(
+                    'Trying to set ContextParam {} to value {} of type {} which does not match param type {}'.format(
+                        name, value, type(value), param.type))
             self.__dict__['vars'][name].set(value)
 
     def get(self):
@@ -117,8 +120,10 @@ class ContextParams:
         vars = []
         for param in self.params:
             value = self.__dict__['vars'][param.name].get()
-            vars.append('{}: {} ({}, type={}, default={})'.format(param.name, value, param.description, param.type, param.default))
+            vars.append('{}: {} ({}, type={}, default={})'.format(param.name, value, param.description, param.type,
+                                                                  param.default))
         return '\n'.join(vars)
+
 
 # Proxy pattern from
 # http://jtushman.github.io/blog/2014/05/02/module-properties/
@@ -139,8 +144,10 @@ class ModuleProperty(object):
 def cxpr():
     return get_context_params()
 
+
 # Context params global instance
 context_params = None
+
 
 def get_context_params():
     global context_params

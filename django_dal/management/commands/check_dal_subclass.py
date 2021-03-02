@@ -3,8 +3,9 @@
 from django.apps import apps
 from django.core.management.base import BaseCommand
 
-from django_dal.managers import DALManager, DALTreeManager
+from django_dal.managers import DALManager
 from django_dal.models import DALModel, DALMPTTModel
+from django_dal.mptt_managers import DALTreeManager
 
 
 class Command(BaseCommand):

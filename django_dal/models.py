@@ -1,11 +1,11 @@
-from django.core.exceptions import PermissionDenied
-from django.db import models
 from django.contrib.gis.db import models as GISmodels
-
+from django.db import models
 from django.db.models.options import Options
-from django_dal.utils import check_permission
-from django_dal.managers import DALManager, DALTreeManager
 from mptt.models import MPTTModel
+
+from django_dal.managers import DALManager
+from django_dal.mptt_managers import DALTreeManager
+from django_dal.utils import check_permission
 
 # Add `relations_limit` attribute to Meta class
 if hasattr(models, 'options') and \
@@ -42,13 +42,14 @@ class DALModel(GISmodels.Model):
     def delete(self,
                using=None,
                keep_parents=False,
-             *args,
-             **kwargs):
+               *args,
+               **kwargs):
 
         check_permission(self, 'delete')
 
         super().delete(using=using,
                        keep_parents=keep_parents)
+
 
 class DALMPTTModel(MPTTModel):
     objects = DALTreeManager()
@@ -85,4 +86,3 @@ class DALMPTTModel(MPTTModel):
 
         super().delete(using=using,
                        keep_parents=keep_parents)
-

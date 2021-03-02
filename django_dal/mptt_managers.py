@@ -1,19 +1,19 @@
 """
 A custom manager for working with trees of objects.
 """
-import functools
+
 import contextlib
-from itertools import groupby
+import functools
 from inspect import signature
+from itertools import groupby
+
 from django.db import models, connections, router
 from django.db.models import F, ManyToManyField, Max, Q
 from django.utils.translation import ugettext as _
-
 from mptt.compat import cached_field_value
 from mptt.exceptions import CantDisableUpdates, InvalidMove
-from mptt.querysets import TreeQuerySet
-from mptt.utils import _get_tree_model
 from mptt.signals import node_moved
+from mptt.utils import _get_tree_model
 
 from django_dal.query import DALTreeQuerySet
 from django_dal.utils import check_permission
