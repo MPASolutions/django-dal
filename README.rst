@@ -1,5 +1,12 @@
 Django DAL
-============
+==========
+
+.. image:: https://badge.fury.io/py/django-dal.svg
+    :target: https://badge.fury.io/py/django-dal
+    :alt: Version
+
+.. image:: https://readthedocs.org/projects/django-dal/badge/?version=latest
+    :target: http://django-dal.readthedocs.org/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/github/issues/MPASolutions/django-dal.svg
     :target: https://github.com/MPASolutions/django-dal/issues
