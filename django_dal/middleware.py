@@ -8,6 +8,7 @@ class ContextParamsMiddleware:
 
     def __call__(self, request):
         context_params = get_context_params()
+        context_params.set_to_none()
         context_params.set_from_request(request)
 
         response = self.get_response(request)
