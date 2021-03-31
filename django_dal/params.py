@@ -61,8 +61,13 @@ class ContextParams:
     def set_from_request(self, request):
         self.set(self.get_from_request(request))
 
-    def set(self, values):
-        self.set_to_none()
+    def get_from_request_post(self, request):
+        return {}
+
+    def set_from_request_post(self, request):
+        self.set_post(self.get_from_request_post(request))
+
+    def _set(self, values):
         for name, value in values.items():
             param = self._get_param(name)  # raises exception if does not exist
             # e.g. request.user in middleware may LazyObject
@@ -73,6 +78,13 @@ class ContextParams:
                     'Trying to set ContextParam {} to value {} of type {} which does not match param type {}'.format(
                         name, value, type(value), param.type))
             self.__dict__['vars'][name].set(value)
+
+    def set(self, values):
+        self.set_to_none()
+        self._set(values)
+
+    def set_post(self, values):
+        self._set(values)
 
     def get(self):
         vars = OrderedDict()

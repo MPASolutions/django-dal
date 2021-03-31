@@ -10,6 +10,7 @@ class ContextParamsMiddleware:
         context_params = get_context_params()
         context_params.set_to_none()
         context_params.set_from_request(request)
+        context_params.set_from_request_post(request)
 
         response = self.get_response(request)
         return response
