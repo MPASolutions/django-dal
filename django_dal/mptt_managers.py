@@ -1,6 +1,7 @@
 """
 A custom manager for working with trees of objects.
 """
+from builtins import Exception
 
 import contextlib
 import functools

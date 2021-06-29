@@ -1,5 +1,6 @@
 from django.db.models.query import QuerySet
 from django_dal.utils import check_permission
+from mptt.querysets import TreeQuerySet
 
 
 class DALQuerySet(QuerySet):
@@ -25,7 +26,7 @@ class DALQuerySet(QuerySet):
         return super().update(objs, fields, batch_size=batch_size)
 
 
-class DALTreeQuerySet(DALQuerySet):
+class DALTreeQuerySet(TreeQuerySet, DALQuerySet):
     def get_descendants(self, *args, **kwargs):
         """
         Alias to `mptt.managers.TreeManager.get_queryset_descendants`.
