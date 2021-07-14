@@ -1,6 +1,7 @@
 from django.db.models.query import QuerySet
 from django_dal.utils import check_permission
 from mptt.querysets import TreeQuerySet
+from django.db.models.utils import resolve_callables
 
 
 class DALQuerySet(QuerySet):
@@ -24,6 +25,17 @@ class DALQuerySet(QuerySet):
         # raise exception if no permission
         check_permission(self.model, 'change')
         return super().update(objs, fields, batch_size=batch_size)
+
+    def update_or_create(self, defaults=None, **kwargs):
+        defaults = defaults or {}
+        self._for_write = True
+        obj, created = self.get_or_create(defaults, **kwargs)
+        if created:
+            return obj, created
+        for k, v in resolve_callables(defaults):
+            setattr(obj, k, v)
+        obj.save(using=self.db)
+        return obj, False
 
 
 class DALTreeQuerySet(TreeQuerySet, DALQuerySet):
