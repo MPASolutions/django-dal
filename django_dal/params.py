@@ -31,8 +31,6 @@ class ContextParams:
         self.__dict__['vars'][name].set(value)
 
     def _get_param(self, name):
-        a = self.params
-        b = [i.name for i in self.params]
         for param in self.params:
             if param.name == name:
                 return param
