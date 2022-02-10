@@ -2,7 +2,7 @@ from django.db.models.query import QuerySet
 from django_dal.utils import check_permission
 from mptt.querysets import TreeQuerySet
 from django.db.models.utils import resolve_callables
-
+from mptt import utils
 
 class DALQuerySet(QuerySet):
 
