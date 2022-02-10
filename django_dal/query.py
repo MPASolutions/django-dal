@@ -24,7 +24,7 @@ class DALQuerySet(QuerySet):
     def bulk_update(self, objs, fields, batch_size=None):
         # raise exception if no permission
         check_permission(self.model, 'change')
-        return super().update(objs, fields, batch_size=batch_size)
+        return super().bulk_update(objs, fields, batch_size=batch_size)
 
     def update_or_create(self, defaults=None, **kwargs):
         defaults = defaults or {}

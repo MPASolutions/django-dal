@@ -189,7 +189,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         if direction == 'asc':
             max_attr = opts.left_attr
             min_attr = opts.right_attr
-        elif direction == 'desc':
+        else: #'desc':
             max_attr = opts.right_attr
             min_attr = opts.left_attr
 
