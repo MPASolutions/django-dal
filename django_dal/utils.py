@@ -5,7 +5,7 @@ from django_dal.params import cxpr
 
 
 class HttpResponseForbiddenInfo(HttpResponse):
-    status_code = 304
+    status_code = 403
 
     def __init__(self, *args, **kwargs):
         if 'perm_code' in kwargs:
