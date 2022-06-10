@@ -25,7 +25,10 @@ class ContextParams:
             self.__dict__['vars'][param.name] = ContextVar(param.name, default=param.default)
 
     def __getattr__(self, name):
-        return self.__dict__['vars'][name].get()
+        try:
+            return self.__dict__['vars'][name].get()
+        except KeyError:
+            raise AttributeError
 
     def __setattr__(self, name, value):
         self.__dict__['vars'][name].set(value)
