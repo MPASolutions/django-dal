@@ -42,8 +42,8 @@ class DALTreeQuerySet(DALQuerySet):
 
     get_ancestors.queryset_only = True
 
-    def get_cached_trees(self):
-        """
-        Alias to `mptt.utils.get_cached_trees`.
-        """
-        return utils.get_cached_trees(self)
+#    def get_cached_trees(self):
+#        """
+#        Alias to `mptt.utils.get_cached_trees`.
+#        """
+#        return utils.get_cached_trees(self)
