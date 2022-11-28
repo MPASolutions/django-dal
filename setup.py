@@ -58,7 +58,7 @@ setup(
     url='https://github.com/MPASolutions/django-dal',
     author='MPA Solutions',
     author_email='info@mpasol.it',
-    install_requires=parse_requirements('requirements.txt', session=False),
+    install_requires=[i.requirement for i in parse_requirements('requirements.txt', session=False)],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
