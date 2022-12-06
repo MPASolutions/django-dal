@@ -9,7 +9,7 @@ from itertools import groupby
 
 from django.db import models, connections, router
 from django.db.models import F, ManyToManyField, Max, Q
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from mptt.compat import cached_field_value
 from mptt.exceptions import CantDisableUpdates, InvalidMove
 from mptt.signals import node_moved
