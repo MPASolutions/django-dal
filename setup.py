@@ -3,6 +3,7 @@ import re
 import sys
 
 from setuptools import find_packages
+from pip._internal.req import parse_requirements
 
 try:
     from setuptools import setup
@@ -57,10 +58,7 @@ setup(
     url='https://github.com/MPASolutions/django-dal',
     author='MPA Solutions',
     author_email='info@mpasol.it',
-    install_requires=[
-        'Django>=3.0',
-        'django-mptt>=0.11.0',
-    ],
+    install_requires=[i.requirement for i in parse_requirements('requirements.txt', session=False)],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
