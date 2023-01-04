@@ -2,7 +2,7 @@
 import binascii
 
 import base64
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate
 
 from django_dal.params import get_context_params
 
@@ -45,10 +45,16 @@ def get_basic_auth(request):
 
 def authorize(request):
     if not request.user.is_authenticated:
-        user, password, msg = get_basic_auth(request)
+        username, password, msg = get_basic_auth(request)
         if msg is not None:
             return False, msg
+
+        user = authenticate(username=username, password=password)
+        if not user or not user.is_active:
+            return False, 'User is not active'
+
         login(request, user)
+
         if not request.user.is_authenticated:
             return False, 'User is not authenticated'
 
