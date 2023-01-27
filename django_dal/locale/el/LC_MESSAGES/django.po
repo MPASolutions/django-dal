@@ -1,0 +1,44 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-27 08:25+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: mptt_managers.py:562
+msgid "Cannot insert a node which has already been saved."
+msgstr ""
+
+#: mptt_managers.py:852 mptt_managers.py:1010 mptt_managers.py:1046
+#: mptt_managers.py:1210
+#, python-format
+msgid "An invalid position was given: %s."
+msgstr ""
+
+#: mptt_managers.py:996 mptt_managers.py:1190
+msgid "A node may not be made a sibling of itself."
+msgstr ""
+
+#: mptt_managers.py:1169 mptt_managers.py:1287
+msgid "A node may not be made a child of itself."
+msgstr ""
+
+#: mptt_managers.py:1171 mptt_managers.py:1289
+msgid "A node may not be made a child of any of its descendants."
+msgstr ""
+
+#: mptt_managers.py:1192
+msgid "A node may not be made a sibling of any of its descendants."
+msgstr ""
