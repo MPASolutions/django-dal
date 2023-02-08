@@ -121,10 +121,11 @@ class ContextParams:
         return context.run(self.run_in_context, *args, **kwargs)
 
     def __str__(self):
-        vars = self.get_list()
-        for name, value in self.get():
-            vars.append('{}={}'.format(name, value))
-        return '{}({})'.format(self.__class__.__name__, ', '.join(vars))
+        # vars = self.get_list()
+        var_list = []
+        for name, value in self.get().items():
+            var_list.append('{}={}'.format(name, value))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(var_list))
 
     def __repr__(self):
         return self.__str__()
