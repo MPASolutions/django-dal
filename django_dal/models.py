@@ -1,4 +1,10 @@
-from django.contrib.gis.db import models as GISmodels
+from django.apps import apps
+
+if apps.is_installed("django.contrib.gis"):
+    from django.contrib.gis.db.models import Model
+else:
+    from django.db.models import Model
+
 from django.db import models
 from django.db.models.options import Options
 from mptt.models import MPTTModel
@@ -14,7 +20,7 @@ if hasattr(models, 'options') and \
     models.options.DEFAULT_NAMES += ('relations_limit',)
 
 
-class DALModel(GISmodels.Model):
+class DALModel(Model):
     objects = DALManager()
 
     class Meta:
