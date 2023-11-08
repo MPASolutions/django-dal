@@ -21,8 +21,9 @@ class HttpResponseForbiddenInfo(HttpResponse):
 
 
 def check_permission(model, perm_name):
-    perm_code = f'{model._meta.app_label}.{perm_name}_{model._meta.model_name}'
-    if cxpr.user is not None:
-        if not cxpr.user.has_perm(perm_code):
-            raise HttpResponseForbiddenInfo(**{'perm_code': perm_code,
-                                               'user': cxpr.user})
+    if model is not None:
+        perm_code = f'{model._meta.app_label}.{perm_name}_{model._meta.model_name}'
+        if cxpr.user is not None:
+            if not cxpr.user.has_perm(perm_code):
+                raise HttpResponseForbiddenInfo(**{'perm_code': perm_code,
+                                                   'user': cxpr.user})
