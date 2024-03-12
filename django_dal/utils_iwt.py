@@ -4,6 +4,7 @@ import fnmatch
 import json
 from datetime import timezone
 from pathlib import Path
+from typing import Optional, Tuple
 
 import jwt
 from cryptography.hazmat.backends import default_backend
@@ -13,6 +14,21 @@ from django.core.exceptions import ImproperlyConfigured, BadRequest
 
 
 def read_file_or_str_bytes(path_or_str):
+    """
+    Reads the content of a file or a bytes string.
+
+    This function takes a path or a bytes string as input. If the input is a Path object
+    and points to a valid file, it reads and returns the content of the file as bytes.
+    If the input is already a bytes string, it simply returns the input as is. If the
+    input is neither a valid file nor a bytes string, it raises an ImproperlyConfigured
+    exception.
+
+    :param path_or_str: The path to the file or a bytes string.
+    :type path_or_str: pathlib.Path or bytes
+    :return: The content of the file or the bytes string.
+    :rtype: bytes
+    :raises ImproperlyConfigured: If the input is not a valid file or a bytes string.
+    """
     if path_or_str is not None:
         if isinstance(path_or_str, Path):
             if path_or_str.is_file():
@@ -63,8 +79,8 @@ def encode_jwt(request, audience, issuer=None, expiration=30, extra_payload=None
     Settings configuration example (gerally configured only in issuers projects settings):
     DJANGO_DAL_RSA_KEYS = {
         'local': {
-            'private': 'my loacl private kwy',  # path or bstr key
-            'passphrase': 'my local passphrase',  # optional str or None
+            'private': 'my loacl private kwy',  # pathlib.Path or bstr key
+            'passphrase': 'my local passphrase',  # optional bytestr or None
         },
     }
 
@@ -119,26 +135,31 @@ def encode_jwt(request, audience, issuer=None, expiration=30, extra_payload=None
     return None
 
 
-def decode_jwt(request, jwt_required=False, debug=False):
+def decode_jwt(
+    request, jwt_required=False, debug=False
+) -> Tuple[bool, Optional[dict], str]:
     """
-    Try to decode JWT if sended in request data and audience project is configured to recive JWT from the given issuer
+    Try to decode JWT if sent in request data and audience project is configured to receive a JWT from the given issuer
 
     Settings configuration example (usually configured only in audience project settings with list of supported isssuers):
     DJANGO_DAL_RSA_KEYS = {
         'remotes': {
             'public': {
-                'biogardgis.test.mpasol.it': 'public remote biogard',  # path or bstr key
-                # 'urn_issuere2': 'public remote issuere2'  # path or bstr key
+                'biogardgis.test.mpasol.it': 'public remote biogard',  # pathlib.Path or bstr key
+                # 'urn_issuere2': 'public remote issuere2'  # pathlib.Path or bstr key
             }
         }
     }
 
     :param request:
-    :param jwt_required: deafult False, denotes if JWT autentication is requierd for given rquest
-    if False return Error only when JWT is sended request data and audience project is configured to recive JWT from the given issuer
+    :param jwt_required: default False, denotes if JWT autentication is required for given request
+    if False return Error only when JWT is sent in request data and audience project is configured to receive JWT from the given issuer
     if True return Error in any case JWT cannot be authorized succefully, or settings has no issuer public key configured
     :param debug: return orginal expetion message when unable to decode JWT
-    :return:
+    return: A tuple containing a boolean indicating if the decoding was successful, the
+        payload of the decoded JWT, or None if the JWT could not be decoded, and a
+        string error message.
+    :rtype: tuple (bool, dict or None, str)
     """
     jwt_payload = None
     # performs cehcks to verify that the authentication with JWT can be done
