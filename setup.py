@@ -3,7 +3,6 @@ import re
 import sys
 
 from setuptools import find_packages
-from pip._internal.req import parse_requirements
 
 try:
     from setuptools import setup
@@ -19,6 +18,16 @@ def get_version(*file_paths):
     if version_match:
         return version_match.group(1)
     raise RuntimeError('Unable to find version string.')
+
+
+def parse_requirements(filename):
+    with open(filename, "r") as file:
+        requirements = [
+            line.split(" #")[0].strip()
+            for line in file
+            if line.strip() and not line.strip().startswith("#")
+        ]
+    return requirements
 
 
 version = get_version("django_dal", "__init__.py")
@@ -58,7 +67,7 @@ setup(
     url='https://github.com/MPASolutions/django-dal',
     author='MPA Solutions',
     author_email='info@mpasol.it',
-    install_requires=[i.requirement for i in parse_requirements('requirements.txt', session=False)],
+    install_requires=parse_requirements('requirements.txt'),
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
