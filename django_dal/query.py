@@ -1,7 +1,4 @@
-from itertools import chain
-
 from django.db.models.query import QuerySet
-from django.db.models.query_utils import FilteredRelation
 from django.db.models.utils import resolve_callables
 from mptt.querysets import TreeQuerySet
 
@@ -12,22 +9,22 @@ class DALQuerySet(QuerySet):
 
     def update(self, **kwargs):
         # raise exception if no permission
-        check_permission(self.model, 'change')
+        check_permission(self.model, "change")
         return super().update(**kwargs)
 
     def delete(self):
         # raise exception if no permission
-        check_permission(self.model, 'delete')
+        check_permission(self.model, "delete")
         return super().delete()
 
     def bulk_create(self, objs, batch_size=None, ignore_conflicts=False):
         # raise exception if no permission
-        check_permission(self.model, 'add')
+        check_permission(self.model, "add")
         return super().bulk_create(objs, batch_size=batch_size, ignore_conflicts=ignore_conflicts)
 
     def bulk_update(self, objs, fields, batch_size=None):
         # raise exception if no permission
-        check_permission(self.model, 'change')
+        check_permission(self.model, "change")
         return super().bulk_update(objs, fields, batch_size=batch_size)
 
     def update_or_create(self, defaults=None, **kwargs):
@@ -58,6 +55,7 @@ class DALTreeQuerySet(TreeQuerySet, DALQuerySet):
         return self.model._tree_manager.get_queryset_ancestors(self, *args, **kwargs)
 
     get_ancestors.queryset_only = True
+
 
 #    def get_cached_trees(self):
 #        """
