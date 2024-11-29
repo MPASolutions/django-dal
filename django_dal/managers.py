@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.db.models.fields.related import ForeignObjectRel
 from django.db.models.manager import Manager
 
+from django_dal.mptt_managers import DALTreeManager  # noqa: F401
 from django_dal.query import DALQuerySet
 from django_dal.utils import check_permission
 
@@ -54,11 +55,11 @@ class DALManager(Manager.from_queryset(DALQuerySet)):
     def get_filter(self):
         qsets = Q()
 
-        test_1 = self.model is not None
-        test_2 = hasattr(self.model._meta, "relations_limit") is True
-        test_3 = isinstance(self.model._meta.relations_limit, list) is True
-
-        if test_1 and test_2 and test_3:
+        if (
+            (self.model is not None)
+            and (hasattr(self.model._meta, "relations_limit") is True)
+            and (isinstance(self.model._meta.relations_limit, list) is True)
+        ):
 
             for relation_limit in self.model._meta.relations_limit:
                 model = self._get_model(self.model, relation_limit)
