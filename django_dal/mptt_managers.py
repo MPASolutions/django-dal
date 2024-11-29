@@ -1,14 +1,14 @@
 """
 A custom manager for working with trees of objects.
 """
-from builtins import Exception
 
 import contextlib
 import functools
+from builtins import Exception
 from inspect import signature
 from itertools import groupby
 
-from django.db import models, connections, router
+from django.db import connections, models, router
 from django.db.models import F, ManyToManyField, Max, Q
 from django.utils.translation import gettext as _
 from mptt.compat import cached_field_value
@@ -19,7 +19,7 @@ from mptt.utils import _get_tree_model
 from django_dal.query import DALTreeQuerySet
 from django_dal.utils import check_permission
 
-__all__ = ('DALTreeManager',)
+__all__ = ("DALTreeManager",)
 
 
 COUNT_SUBQUERY = """(
@@ -67,16 +67,17 @@ def delegate_manager(method):
     """
     Delegate method calls to base manager, if exists.
     """
+
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
-        if hasattr(self,'_base_manager') and self._base_manager:
+        if hasattr(self, "_base_manager") and self._base_manager:
             return getattr(self._base_manager, method.__name__)(*args, **kwargs)
         return method(self, *args, **kwargs)
+
     return wrapped
 
 
 class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
-
     """
     A manager for working with trees of objects.
     """
@@ -94,45 +95,41 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
 
     def _add_prefix(self, qset, prefix):
         # Recursive add prefix
-        if isinstance(qset, Q) and hasattr(qset, 'children'):
+        if isinstance(qset, Q) and hasattr(qset, "children"):
             self._add_prefix(qset.children, prefix)
         # Add prefix
         elif isinstance(qset, list):
             for idx, q in enumerate(qset):
                 if isinstance(q, tuple):
                     qset[idx] = ("{}__{}".format(prefix, q[0]), q[1])
-                elif isinstance(q, Q) and hasattr(q, 'children'):
+                elif isinstance(q, Q) and hasattr(q, "children"):
                     self._add_prefix(q.children, prefix)
 
     def all(self, ignore_filters=False):
         sig = signature(self.get_queryset)
-        if sig.parameters.get('ignore_filters', None) is not None:
+        if sig.parameters.get("ignore_filters", None) is not None:
             return self.get_queryset(ignore_filters=ignore_filters)
         else:
             return self.get_queryset()
 
+    def get_queryset(self, ignore_filters=False, *args, **kwargs):
+        check_permission(self.model, "view")
 
-    def get_queryset(self, ignore_filters=False, * args, **kwargs):
-        check_permission(self.model, 'view')
-
-        queryset = super(DALTreeManager, self).get_queryset(
-            *args, **kwargs
-        ).order_by(
-            self.tree_id_attr, self.left_attr
+        queryset = (
+            super(DALTreeManager, self).get_queryset(*args, **kwargs).order_by(self.tree_id_attr, self.left_attr)
         )
         if ignore_filters is False:
             queryset = queryset.filter(self.get_filter())
         return queryset
 
-
     def get_filter(self):
         qsets = Q()
 
-        if hasattr(self.model._meta, 'relations_limit') and isinstance(self.model._meta.relations_limit, list):
+        if hasattr(self.model._meta, "relations_limit") and isinstance(self.model._meta.relations_limit, list):
             for relation_limit in self.model._meta.relations_limit:
                 model = self._get_model(self.model, relation_limit)
 
-                if model is not None and hasattr(model.objects, 'get_filter') and callable(model.objects.get_filter):
+                if model is not None and hasattr(model.objects, "get_filter") and callable(model.objects.get_filter):
                     filters = model.objects.get_filter()
                     if isinstance(filters, Q):
                         self._add_prefix(qset=filters, prefix=relation_limit)
@@ -183,19 +180,19 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
 
         filters = Q()
 
-        e = 'e' if include_self else ''
-        max_op = 'lt' + e
-        min_op = 'gt' + e
-        if direction == 'asc':
+        e = "e" if include_self else ""
+        max_op = "lt" + e
+        min_op = "gt" + e
+        if direction == "asc":
             max_attr = opts.left_attr
             min_attr = opts.right_attr
-        else: #'desc':
+        else:
             max_attr = opts.right_attr
             min_attr = opts.left_attr
 
         tree_key = opts.tree_id_attr
-        min_key = '%s__%s' % (min_attr, min_op)
-        max_key = '%s__%s' % (max_attr, max_op)
+        min_key = "%s__%s" % (min_attr, min_op)
+        max_key = "%s__%s" % (max_attr, max_op)
 
         q = queryset.order_by(opts.tree_id_attr, opts.parent_attr, opts.left_attr).only(
             opts.tree_id_attr,
@@ -205,47 +202,54 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
             max_attr,
             opts.parent_attr,
             # These fields are used by MPTTModel.update_mptt_cached_fields()
-            *[f.lstrip('-') for f in opts.order_insertion_by]
+            *[f.lstrip("-") for f in opts.order_insertion_by]
         )
 
         if not q:
             return self.none()
 
         for group in groupby(
-                q,
-                key=lambda n: (
-                    getattr(n, opts.tree_id_attr),
-                    getattr(n, opts.parent_attr + '_id'),
-                )):
+            q,
+            key=lambda n: (
+                getattr(n, opts.tree_id_attr),
+                getattr(n, opts.parent_attr + "_id"),
+            ),
+        ):
             next_lft = None
             for node in list(group[1]):
-                tree, lft, rght, min_val, max_val = (getattr(node, opts.tree_id_attr),
-                                                     getattr(node, opts.left_attr),
-                                                     getattr(node, opts.right_attr),
-                                                     getattr(node, min_attr),
-                                                     getattr(node, max_attr))
+                tree, lft, rght, min_val, max_val = (
+                    getattr(node, opts.tree_id_attr),
+                    getattr(node, opts.left_attr),
+                    getattr(node, opts.right_attr),
+                    getattr(node, min_attr),
+                    getattr(node, max_attr),
+                )
                 if next_lft is None:
                     next_lft = rght + 1
-                    min_max = {'min': min_val, 'max': max_val}
+                    min_max = {"min": min_val, "max": max_val}
                 elif lft == next_lft:
-                    if min_val < min_max['min']:
-                        min_max['min'] = min_val
-                    if max_val > min_max['max']:
-                        min_max['max'] = max_val
+                    if min_val < min_max["min"]:
+                        min_max["min"] = min_val
+                    if max_val > min_max["max"]:
+                        min_max["max"] = max_val
                     next_lft = rght + 1
                 elif lft != next_lft:
-                    filters |= Q(**{
-                        tree_key: tree,
-                        min_key: min_max['min'],
-                        max_key: min_max['max'],
-                    })
-                    min_max = {'min': min_val, 'max': max_val}
+                    filters |= Q(
+                        **{
+                            tree_key: tree,
+                            min_key: min_max["min"],
+                            max_key: min_max["max"],
+                        }
+                    )
+                    min_max = {"min": min_val, "max": max_val}
                     next_lft = rght + 1
-            filters |= Q(**{
-                tree_key: tree,
-                min_key: min_max['min'],
-                max_key: min_max['max'],
-            })
+            filters |= Q(
+                **{
+                    tree_key: tree,
+                    min_key: min_max["min"],
+                    max_key: min_max["max"],
+                }
+            )
 
         return self.filter(filters)
 
@@ -257,7 +261,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         If ``include_self=True``, nodes in ``queryset`` will also
         be included in the result.
         """
-        return self._get_queryset_relatives(queryset, 'desc', include_self)
+        return self._get_queryset_relatives(queryset, "desc", include_self)
 
     def get_queryset_ancestors(self, queryset, include_self=False):
         """
@@ -267,7 +271,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         If ``include_self=True``, nodes in ``queryset`` will also
         be included in the result.
         """
-        return self._get_queryset_relatives(queryset, 'asc', include_self)
+        return self._get_queryset_relatives(queryset, "asc", include_self)
 
     @contextlib.contextmanager
     def disable_mptt_updates(self):
@@ -313,8 +317,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
             #  vote no - that's a bit implicit and it's a weird use-case
             #  anyway.  Open to further discussion :)
             raise CantDisableUpdates(
-                "You can't disable/delay mptt updates on %s,"
-                " it's an abstract model" % self.model.__name__
+                "You can't disable/delay mptt updates on %s," " it's an abstract model" % self.model.__name__
             )
         elif self.model._meta.proxy:
             #  a proxy model. disabling updates would implicitly affect other
@@ -323,16 +326,14 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
             #  explicit.
             raise CantDisableUpdates(
                 "You can't disable/delay mptt updates on %s, it's a proxy"
-                " model. Call the concrete model instead."
-                % self.model.__name__
+                " model. Call the concrete model instead." % self.model.__name__
             )
         elif self.tree_model is not self.model:
             #  a multiple-inheritance child of an MPTTModel.  Disabling
             #  updates may affect instances of other models in the tree.
             raise CantDisableUpdates(
                 "You can't disable/delay mptt updates on %s, it doesn't"
-                " contain the mptt fields."
-                % self.model.__name__
+                " contain the mptt fields." % self.model.__name__
             )
 
         if not self.model._mptt_updates_enabled:
@@ -429,13 +430,13 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
 
     def _translate_lookups(self, **lookups):
         new_lookups = {}
-        join_parts = '__'.join
+        join_parts = "__".join
         for k, v in lookups.items():
-            parts = k.split('__')
+            parts = k.split("__")
             new_parts = []
             new_parts__append = new_parts.append
             for part in parts:
-                new_parts__append(getattr(self, part + '_attr', part))
+                new_parts__append(getattr(self, part + "_attr", part))
             new_lookups[join_parts(new_parts)] = v
         return new_lookups
 
@@ -461,8 +462,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
     def _get_connection(self, **hints):
         return connections[router.db_for_write(self.model, **hints)]
 
-    def add_related_count(self, queryset, rel_model, rel_field, count_attr,
-                          cumulative=False):
+    def add_related_count(self, queryset, rel_model, rel_field, count_attr, cumulative=False):
         """
         Adds a related item count to a given ``QuerySet`` using its
         ``extra`` method, for a ``Model`` class which has a relation to
@@ -496,50 +496,51 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         if isinstance(mptt_field, ManyToManyField):
             if cumulative:
                 subquery = CUMULATIVE_COUNT_SUBQUERY_M2M % {
-                    'rel_table': qn(rel_model._meta.db_table),
-                    'rel_pk': qn(rel_model._meta.pk.column),
-                    'rel_m2m_table': qn(mptt_field.m2m_db_table()),
-                    'rel_m2m_column': qn(mptt_field.m2m_column_name()),
-                    'mptt_fk': qn(mptt_field.m2m_reverse_name()),
-                    'mptt_table': qn(self.tree_model._meta.db_table),
-                    'mptt_pk': qn(meta.pk.column),
-                    'tree_id': qn(meta.get_field(self.tree_id_attr).column),
-                    'left': qn(meta.get_field(self.left_attr).column),
-                    'right': qn(meta.get_field(self.right_attr).column),
+                    "rel_table": qn(rel_model._meta.db_table),
+                    "rel_pk": qn(rel_model._meta.pk.column),
+                    "rel_m2m_table": qn(mptt_field.m2m_db_table()),
+                    "rel_m2m_column": qn(mptt_field.m2m_column_name()),
+                    "mptt_fk": qn(mptt_field.m2m_reverse_name()),
+                    "mptt_table": qn(self.tree_model._meta.db_table),
+                    "mptt_pk": qn(meta.pk.column),
+                    "tree_id": qn(meta.get_field(self.tree_id_attr).column),
+                    "left": qn(meta.get_field(self.left_attr).column),
+                    "right": qn(meta.get_field(self.right_attr).column),
                 }
             else:
                 subquery = COUNT_SUBQUERY_M2M % {
-                    'rel_table': qn(rel_model._meta.db_table),
-                    'rel_pk': qn(rel_model._meta.pk.column),
-                    'rel_m2m_table': qn(mptt_field.m2m_db_table()),
-                    'rel_m2m_column': qn(mptt_field.m2m_column_name()),
-                    'mptt_fk': qn(mptt_field.m2m_reverse_name()),
-                    'mptt_table': qn(self.tree_model._meta.db_table),
-                    'mptt_pk': qn(meta.pk.column),
+                    "rel_table": qn(rel_model._meta.db_table),
+                    "rel_pk": qn(rel_model._meta.pk.column),
+                    "rel_m2m_table": qn(mptt_field.m2m_db_table()),
+                    "rel_m2m_column": qn(mptt_field.m2m_column_name()),
+                    "mptt_fk": qn(mptt_field.m2m_reverse_name()),
+                    "mptt_table": qn(self.tree_model._meta.db_table),
+                    "mptt_pk": qn(meta.pk.column),
                 }
         else:
             if cumulative:
                 subquery = CUMULATIVE_COUNT_SUBQUERY % {
-                    'rel_table': qn(rel_model._meta.db_table),
-                    'mptt_fk': qn(rel_model._meta.get_field(rel_field).column),
-                    'mptt_table': qn(self.tree_model._meta.db_table),
-                    'mptt_rel_to': qn(mptt_field.remote_field.field_name),
-                    'tree_id': qn(meta.get_field(self.tree_id_attr).column),
-                    'left': qn(meta.get_field(self.left_attr).column),
-                    'right': qn(meta.get_field(self.right_attr).column),
+                    "rel_table": qn(rel_model._meta.db_table),
+                    "mptt_fk": qn(rel_model._meta.get_field(rel_field).column),
+                    "mptt_table": qn(self.tree_model._meta.db_table),
+                    "mptt_rel_to": qn(mptt_field.remote_field.field_name),
+                    "tree_id": qn(meta.get_field(self.tree_id_attr).column),
+                    "left": qn(meta.get_field(self.left_attr).column),
+                    "right": qn(meta.get_field(self.right_attr).column),
                 }
             else:
                 subquery = COUNT_SUBQUERY % {
-                    'rel_table': qn(rel_model._meta.db_table),
-                    'mptt_fk': qn(rel_model._meta.get_field(rel_field).column),
-                    'mptt_table': qn(self.tree_model._meta.db_table),
-                    'mptt_rel_to': qn(mptt_field.remote_field.field_name),
+                    "rel_table": qn(rel_model._meta.db_table),
+                    "mptt_fk": qn(rel_model._meta.get_field(rel_field).column),
+                    "mptt_table": qn(self.tree_model._meta.db_table),
+                    "mptt_rel_to": qn(mptt_field.remote_field.field_name),
                 }
         return queryset.extra(select={count_attr: subquery})
 
     @delegate_manager
-    def insert_node(self, node, target, position='last-child', save=False,
-                    allow_existing_pk=False, refresh_target=True):
+    def insert_node(
+        self, node, target, position="last-child", save=False, allow_existing_pk=False, refresh_target=True
+    ):
         """
         Sets up the tree state for ``node`` (which has not yet been
         inserted into in the database) so it will be positioned relative
@@ -559,7 +560,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         """
 
         if node.pk and not allow_existing_pk and self.filter(pk=node.pk).exists():
-            raise ValueError(_('Cannot insert a node which has already been saved.'))
+            raise ValueError(_("Cannot insert a node which has already been saved."))
 
         if target is None:
             tree_id = self._get_next_tree_id()
@@ -568,13 +569,13 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
             setattr(node, self.level_attr, 0)
             setattr(node, self.tree_id_attr, tree_id)
             setattr(node, self.parent_attr, None)
-        elif target.is_root_node() and position in ['left', 'right']:
+        elif target.is_root_node() and position in ["left", "right"]:
             if refresh_target:
                 # Ensure mptt values on target are not stale.
                 target._mptt_refresh()
 
             target_tree_id = getattr(target, self.tree_id_attr)
-            if position == 'left':
+            if position == "left":
                 tree_id = target_tree_id
                 space_target = target_tree_id - 1
             else:
@@ -595,8 +596,9 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                 # Ensure mptt values on target are not stale.
                 target._mptt_refresh()
 
-            space_target, level, left, parent, right_shift = \
-                self._calculate_inter_tree_move_values(node, target, position)
+            space_target, level, left, parent, right_shift = self._calculate_inter_tree_move_values(
+                node, target, position
+            )
 
             tree_id = getattr(target, self.tree_id_attr)
             self._create_space(2, space_target, tree_id)
@@ -615,16 +617,17 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         return node
 
     @delegate_manager
-    def _move_node(self, node, target, position='last-child', save=True, refresh_target=True):
+    def _move_node(self, node, target, position="last-child", save=True, refresh_target=True):
         if self.tree_model._mptt_is_tracking:
             # delegate to insert_node and clean up the gaps later.
-            return self.insert_node(node, target, position=position, save=save,
-                                    allow_existing_pk=True, refresh_target=refresh_target)
+            return self.insert_node(
+                node, target, position=position, save=save, allow_existing_pk=True, refresh_target=refresh_target
+            )
         else:
             if target is None:
                 if node.is_child_node():
                     self._make_child_root_node(node)
-            elif target.is_root_node() and position in ('left', 'right'):
+            elif target.is_root_node() and position in ("left", "right"):
                 self._make_sibling_of_root_node(node, target, position)
             else:
                 if node.is_root_node():
@@ -632,7 +635,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                 else:
                     self._move_child_node(node, target, position)
 
-    def move_node(self, node, target, position='last-child'):
+    def move_node(self, node, target, position="last-child"):
         """
         Moves ``node`` relative to a given ``target`` node as specified
         by ``position`` (when appropriate), by examining both nodes and
@@ -657,8 +660,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         """
         self._move_node(node, target, position=position)
         node.save()
-        node_moved.send(sender=node.__class__, instance=node,
-                        target=target, position=position)
+        node_moved.send(sender=node.__class__, instance=node, target=target, position=position)
 
     @delegate_manager
     def root_node(self, tree_id):
@@ -684,13 +686,14 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         qs = self._mptt_filter(parent=None)
         if opts.order_insertion_by:
             qs = qs.order_by(*opts.order_insertion_by)
-        pks = qs.values_list('pk', flat=True)
+        pks = qs.values_list("pk", flat=True)
 
         rebuild_helper = self._rebuild_helper
         idx = 0
         for pk in pks:
             idx += 1
             rebuild_helper(pk, 1, idx)
+
     rebuild.alters_data = True
 
     @delegate_manager
@@ -704,18 +707,18 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         qs = self._mptt_filter(parent=None, tree_id=tree_id)
         if opts.order_insertion_by:
             qs = qs.order_by(*opts.order_insertion_by)
-        pks = qs.values_list('pk', flat=True)
+        pks = qs.values_list("pk", flat=True)
         if not pks:
             return
         if len(pks) > 1:
             raise RuntimeError(
-                "More than one root node with tree_id %d. That's invalid,"
-                " do a full rebuild." % tree_id)
+                "More than one root node with tree_id %d. That's invalid," " do a full rebuild." % tree_id
+            )
 
         self._rebuild_helper(pks[0], 1, tree_id)
 
     @delegate_manager
-    def build_tree_nodes(self, data, target=None, position='last-child'):
+    def build_tree_nodes(self, data, target=None, position="last-child"):
         """
         Load a tree from a nested dictionary for bulk insert, returning an
         array of records. Use to efficiently insert many nodes within a tree
@@ -747,15 +750,15 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         opts = self.model._mptt_meta
         if target:
             tree_id = target.tree_id
-            if position in ('left', 'right'):
+            if position in ("left", "right"):
                 level = getattr(target, opts.level_attr)
-                if position == 'left':
+                if position == "left":
                     cursor = getattr(target, opts.left_attr)
                 else:
                     cursor = getattr(target, opts.right_attr) + 1
             else:
                 level = getattr(target, opts.level_attr) + 1
-                if position == 'first-child':
+                if position == "first-child":
                     cursor = getattr(target, opts.left_attr) + 1
                 else:
                     cursor = getattr(target, opts.right_attr)
@@ -768,7 +771,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
 
         def treeify(data, cursor=1, level=0):
             data = dict(data)
-            children = data.pop('children', [])
+            children = data.pop("children", [])
             node = self.model(**data)
             stack.append(node)
             setattr(node, opts.tree_id_attr, tree_id)
@@ -794,20 +797,14 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         qs = self._mptt_filter(parent__pk=pk)
         if opts.order_insertion_by:
             qs = qs.order_by(*opts.order_insertion_by)
-        child_ids = qs.values_list('pk', flat=True)
+        child_ids = qs.values_list("pk", flat=True)
 
         rebuild_helper = self._rebuild_helper
         for child_id in child_ids:
             right = rebuild_helper(child_id, right, tree_id, level + 1)
 
         qs = self.model._default_manager.filter(pk=pk)
-        self._mptt_update(
-            qs,
-            left=left,
-            right=right,
-            level=level,
-            tree_id=tree_id
-        )
+        self._mptt_update(qs, left=left, right=right, level=level, tree_id=tree_id)
 
         return right + 1
 
@@ -834,22 +831,22 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         target_right = getattr(target, self.right_attr)
         target_level = getattr(target, self.level_attr)
 
-        if position == 'last-child' or position == 'first-child':
-            if position == 'last-child':
+        if position == "last-child" or position == "first-child":
+            if position == "last-child":
                 space_target = target_right - 1
             else:
                 space_target = target_left
             level_change = level - target_level - 1
             parent = target
-        elif position == 'left' or position == 'right':
-            if position == 'left':
+        elif position == "left" or position == "right":
+            if position == "left":
                 space_target = target_left - 1
             else:
                 space_target = target_right
             level_change = level - target_level
             parent = getattr(target, self.parent_attr)
         else:
-            raise ValueError(_('An invalid position was given: %s.') % position)
+            raise ValueError(_("An invalid position was given: %s.") % position)
 
         left_right_change = left - space_target - 1
 
@@ -891,9 +888,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         max_tree_id = max_tree_id or 0
         return max_tree_id + 1
 
-    def _inter_tree_move_and_close_gap(
-            self, node, level_change,
-            left_right_change, new_tree_id):
+    def _inter_tree_move_and_close_gap(self, node, level_change, left_right_change, new_tree_id):
         """
         Removes ``node`` from its current tree, with the given set of
         changes being applied to ``node`` and its descendants, closing
@@ -926,11 +921,11 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                     THEN %(right)s - %%s
                 ELSE %(right)s END
         WHERE %(tree_id)s = %%s""" % {
-            'table': qn(self.tree_model._meta.db_table),
-            'level': qn(opts.get_field(self.level_attr).column),
-            'left': qn(opts.get_field(self.left_attr).column),
-            'tree_id': qn(opts.get_field(self.tree_id_attr).column),
-            'right': qn(opts.get_field(self.right_attr).column),
+            "table": qn(self.tree_model._meta.db_table),
+            "level": qn(opts.get_field(self.level_attr).column),
+            "left": qn(opts.get_field(self.left_attr).column),
+            "tree_id": qn(opts.get_field(self.tree_id_attr).column),
+            "right": qn(opts.get_field(self.right_attr).column),
         }
 
         left = getattr(node, self.left_attr)
@@ -938,13 +933,23 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         gap_size = right - left + 1
         gap_target_left = left - 1
         params = [
-            left, right, level_change,
-            left, right, new_tree_id,
-            left, right, left_right_change,
-            gap_target_left, gap_size,
-            left, right, left_right_change,
-            gap_target_left, gap_size,
-            getattr(node, self.tree_id_attr)
+            left,
+            right,
+            level_change,
+            left,
+            right,
+            new_tree_id,
+            left,
+            right,
+            left_right_change,
+            gap_target_left,
+            gap_size,
+            left,
+            right,
+            left_right_change,
+            gap_target_left,
+            gap_size,
+            getattr(node, self.tree_id_attr),
         ]
 
         cursor = connection.cursor()
@@ -993,21 +998,21 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         a special case which involves shuffling tree ids around.
         """
         if node == target:
-            raise InvalidMove(_('A node may not be made a sibling of itself.'))
+            raise InvalidMove(_("A node may not be made a sibling of itself."))
 
         opts = self.model._meta
         tree_id = getattr(node, self.tree_id_attr)
         target_tree_id = getattr(target, self.tree_id_attr)
 
         if node.is_child_node():
-            if position == 'left':
+            if position == "left":
                 space_target = target_tree_id - 1
                 new_tree_id = target_tree_id
-            elif position == 'right':
+            elif position == "right":
                 space_target = target_tree_id
                 new_tree_id = target_tree_id + 1
             else:
-                raise ValueError(_('An invalid position was given: %s.') % position)
+                raise ValueError(_("An invalid position was given: %s.") % position)
 
             self._create_tree_space(space_target)
             if tree_id > space_target:
@@ -1018,7 +1023,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                 setattr(node, self.tree_id_attr, tree_id + 1)
             self._make_child_root_node(node, new_tree_id)
         else:
-            if position == 'left':
+            if position == "left":
                 if target_tree_id > tree_id:
                     left_sibling = target.get_previous_sibling()
                     if node == left_sibling:
@@ -1030,7 +1035,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                     new_tree_id = target_tree_id
                     lower_bound, upper_bound = new_tree_id, tree_id
                     shift = 1
-            elif position == 'right':
+            elif position == "right":
                 if target_tree_id > tree_id:
                     new_tree_id = target_tree_id
                     lower_bound, upper_bound = tree_id, target_tree_id
@@ -1043,7 +1048,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                     lower_bound, upper_bound = new_tree_id, tree_id
                     shift = 1
             else:
-                raise ValueError(_('An invalid position was given: %s.') % position)
+                raise ValueError(_("An invalid position was given: %s.") % position)
 
             connection = self._get_connection(instance=node)
             qn = connection.ops.quote_name
@@ -1055,13 +1060,12 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                     THEN %%s
                 ELSE %(tree_id)s + %%s END
             WHERE %(tree_id)s >= %%s AND %(tree_id)s <= %%s""" % {
-                'table': qn(self.tree_model._meta.db_table),
-                'tree_id': qn(opts.get_field(self.tree_id_attr).column),
+                "table": qn(self.tree_model._meta.db_table),
+                "tree_id": qn(opts.get_field(self.tree_id_attr).column),
             }
 
             cursor = connection.cursor()
-            cursor.execute(root_sibling_query, [tree_id, new_tree_id, shift,
-                                                lower_bound, upper_bound])
+            cursor.execute(root_sibling_query, [tree_id, new_tree_id, shift, lower_bound, upper_bound])
             setattr(node, self.tree_id_attr, new_tree_id)
 
     def _manage_space(self, size, target, tree_id):
@@ -1089,14 +1093,13 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                     ELSE %(right)s END
             WHERE %(tree_id)s = %%s
               AND (%(left)s > %%s OR %(right)s > %%s)""" % {
-                'table': qn(self.tree_model._meta.db_table),
-                'left': qn(opts.get_field(self.left_attr).column),
-                'right': qn(opts.get_field(self.right_attr).column),
-                'tree_id': qn(opts.get_field(self.tree_id_attr).column),
+                "table": qn(self.tree_model._meta.db_table),
+                "left": qn(opts.get_field(self.left_attr).column),
+                "right": qn(opts.get_field(self.right_attr).column),
+                "tree_id": qn(opts.get_field(self.tree_id_attr).column),
             }
             cursor = connection.cursor()
-            cursor.execute(space_query, [target, size, target, size, tree_id,
-                                         target, target])
+            cursor.execute(space_query, [target, size, target, size, tree_id, target, target])
 
     def _move_child_node(self, node, target, position):
         """
@@ -1126,16 +1129,16 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         level = getattr(node, self.level_attr)
         new_tree_id = getattr(target, self.tree_id_attr)
 
-        space_target, level_change, left_right_change, parent, new_parent_right = \
+        space_target, level_change, left_right_change, parent, new_parent_right = (
             self._calculate_inter_tree_move_values(node, target, position)
+        )
 
         tree_width = right - left + 1
 
         # Make space for the subtree which will be moved
         self._create_space(tree_width, space_target, new_tree_id)
         # Move the subtree
-        self._inter_tree_move_and_close_gap(
-            node, level_change, left_right_change, new_tree_id)
+        self._inter_tree_move_and_close_gap(node, level_change, left_right_change, new_tree_id)
 
         # Update the node to be consistent with the updated
         # tree in the database.
@@ -1164,12 +1167,12 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         target_right = getattr(target, self.right_attr)
         target_level = getattr(target, self.level_attr)
 
-        if position == 'last-child' or position == 'first-child':
+        if position == "last-child" or position == "first-child":
             if node == target:
-                raise InvalidMove(_('A node may not be made a child of itself.'))
+                raise InvalidMove(_("A node may not be made a child of itself."))
             elif left < target_left < right:
-                raise InvalidMove(_('A node may not be made a child of any of its descendants.'))
-            if position == 'last-child':
+                raise InvalidMove(_("A node may not be made a child of any of its descendants."))
+            if position == "last-child":
                 if target_right > right:
                     new_left = target_right - width
                     new_right = target_right - 1
@@ -1185,12 +1188,12 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                     new_right = target_left + width
             level_change = level - target_level - 1
             parent = target
-        elif position == 'left' or position == 'right':
+        elif position == "left" or position == "right":
             if node == target:
-                raise InvalidMove(_('A node may not be made a sibling of itself.'))
+                raise InvalidMove(_("A node may not be made a sibling of itself."))
             elif left < target_left < right:
-                raise InvalidMove(_('A node may not be made a sibling of any of its descendants.'))
-            if position == 'left':
+                raise InvalidMove(_("A node may not be made a sibling of any of its descendants."))
+            if position == "left":
                 if target_left > left:
                     new_left = target_left - width
                     new_right = target_left - 1
@@ -1207,7 +1210,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
             level_change = level - target_level
             parent = getattr(target, self.parent_attr)
         else:
-            raise ValueError(_('An invalid position was given: %s.') % position)
+            raise ValueError(_("An invalid position was given: %s.") % position)
 
         left_boundary = min(left, new_left)
         right_boundary = max(right, new_right)
@@ -1243,21 +1246,35 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
                   THEN %(right)s + %%s
                 ELSE %(right)s END
         WHERE %(tree_id)s = %%s""" % {
-            'table': qn(self.tree_model._meta.db_table),
-            'level': qn(opts.get_field(self.level_attr).column),
-            'left': qn(opts.get_field(self.left_attr).column),
-            'right': qn(opts.get_field(self.right_attr).column),
-            'tree_id': qn(opts.get_field(self.tree_id_attr).column),
+            "table": qn(self.tree_model._meta.db_table),
+            "level": qn(opts.get_field(self.level_attr).column),
+            "left": qn(opts.get_field(self.left_attr).column),
+            "right": qn(opts.get_field(self.right_attr).column),
+            "tree_id": qn(opts.get_field(self.tree_id_attr).column),
         }
 
         cursor = connection.cursor()
-        cursor.execute(move_subtree_query, [
-            left, right, level_change,
-            left, right, left_right_change,
-            left_boundary, right_boundary, gap_size,
-            left, right, left_right_change,
-            left_boundary, right_boundary, gap_size,
-            tree_id])
+        cursor.execute(
+            move_subtree_query,
+            [
+                left,
+                right,
+                level_change,
+                left,
+                right,
+                left_right_change,
+                left_boundary,
+                right_boundary,
+                gap_size,
+                left,
+                right,
+                left_right_change,
+                left_boundary,
+                right_boundary,
+                gap_size,
+                tree_id,
+            ],
+        )
 
         # Update the node to be consistent with the updated
         # tree in the database.
@@ -1284,12 +1301,13 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
         width = right - left + 1
 
         if node == target:
-            raise InvalidMove(_('A node may not be made a child of itself.'))
+            raise InvalidMove(_("A node may not be made a child of itself."))
         elif tree_id == new_tree_id:
-            raise InvalidMove(_('A node may not be made a child of any of its descendants.'))
+            raise InvalidMove(_("A node may not be made a child of any of its descendants."))
 
-        space_target, level_change, left_right_change, parent, right_shift = \
-            self._calculate_inter_tree_move_values(node, target, position)
+        space_target, level_change, left_right_change, parent, right_shift = self._calculate_inter_tree_move_values(
+            node, target, position
+        )
 
         # Create space for the tree which will be inserted
         self._create_space(width, space_target, new_tree_id)
@@ -1307,18 +1325,17 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
             %(tree_id)s = %%s
         WHERE %(left)s >= %%s AND %(left)s <= %%s
           AND %(tree_id)s = %%s""" % {
-            'table': qn(self.tree_model._meta.db_table),
-            'level': qn(opts.get_field(self.level_attr).column),
-            'left': qn(opts.get_field(self.left_attr).column),
-            'right': qn(opts.get_field(self.right_attr).column),
-            'tree_id': qn(opts.get_field(self.tree_id_attr).column),
+            "table": qn(self.tree_model._meta.db_table),
+            "level": qn(opts.get_field(self.level_attr).column),
+            "left": qn(opts.get_field(self.left_attr).column),
+            "right": qn(opts.get_field(self.right_attr).column),
+            "tree_id": qn(opts.get_field(self.tree_id_attr).column),
         }
 
         cursor = connection.cursor()
-        cursor.execute(move_tree_query, [
-            level_change, left_right_change, left_right_change,
-            new_tree_id,
-            left, right, tree_id])
+        cursor.execute(
+            move_tree_query, [level_change, left_right_change, left_right_change, new_tree_id, left, right, tree_id]
+        )
 
         # Update the former root node to be consistent with the updated
         # tree in the database.

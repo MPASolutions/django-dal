@@ -1,5 +1,6 @@
-from django.http import Http404, HttpResponse
 from functools import wraps
+
+from django.http import HttpResponse
 
 from django_dal.utils_authentication import authorize
 
@@ -10,7 +11,7 @@ def basic_login(func):
         logged, error = authorize(request)
 
         if error is not None:
-            return HttpResponse('', status=403)
+            return HttpResponse("", status=403)
         return func(request, *args, **kwargs)
 
     return wrapper

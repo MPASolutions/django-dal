@@ -1,5 +1,5 @@
-from django.db.models import Aggregate
-from django.db.models import Value, CharField
+from django.db.models import Aggregate, CharField, Value
+
 
 class ArrayToString(Aggregate):
     function = "ARRAY_TO_STRING"

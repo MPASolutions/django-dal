@@ -1,6 +1,6 @@
 import importlib
 from collections import OrderedDict
-from contextvars import *
+from contextvars import ContextVar, copy_context
 
 from django.conf import settings
 from django.utils.functional import LazyObject
@@ -20,41 +20,41 @@ class ContextParams:
     params = []
 
     def __init__(self):
-        self.__dict__['vars'] = {}
+        self.__dict__["vars"] = {}
         for param in self.params:
-            self.__dict__['vars'][param.name] = ContextVar(param.name, default=param.default)
+            self.__dict__["vars"][param.name] = ContextVar(param.name, default=param.default)
 
     def __getattr__(self, name):
         try:
-            return self.__dict__['vars'][name].get()
+            return self.__dict__["vars"][name].get()
         except KeyError:
             raise AttributeError
 
     def __setattr__(self, name, value):
-        self.__dict__['vars'][name].set(value)
+        self.__dict__["vars"][name].set(value)
 
     def _get_param(self, name):
         for param in self.params:
             if param.name == name:
                 return param
-        raise Exception('Param {} does not exist in ContextParams'.format(name))
+        raise Exception("Param {} does not exist in ContextParams".format(name))
 
     def set_defaults(self):
         """
         Reset to default values
         :return:
         """
-        for name, variable in self.__dict__['vars'].items():
+        for name, variable in self.__dict__["vars"].items():
             param = self._get_param(name)
-            self.__dict__['vars'][name].set(param.default)
+            self.__dict__["vars"][name].set(param.default)
 
     def set_to_none(self):
         """
         Set all params to None
         :return:
         """
-        for name, variable in self.__dict__['vars'].items():
-            self.__dict__['vars'][name].set(None)
+        for name, variable in self.__dict__["vars"].items():
+            self.__dict__["vars"][name].set(None)
 
     def get_from_request(self, request):
         return {}
@@ -72,13 +72,15 @@ class ContextParams:
         for name, value in values.items():
             param = self._get_param(name)  # raises exception if does not exist
             # e.g. request.user in middleware may LazyObject
-            if isinstance(value, LazyObject) and hasattr(value, '_wrapped'):
+            if isinstance(value, LazyObject) and hasattr(value, "_wrapped"):
                 value = value._wrapped
             if value is not None and not isinstance(value, param.type):
                 raise Exception(
-                    'Trying to set ContextParam {} to value {} of type {} which does not match param type {}'.format(
-                        name, value, type(value), param.type))
-            self.__dict__['vars'][name].set(value)
+                    "Trying to set ContextParam {} to value {} of type {} which does not match param type {}".format(
+                        name, value, type(value), param.type
+                    )
+                )
+            self.__dict__["vars"][name].set(value)
 
     def set(self, values):
         self.set_to_none()
@@ -90,7 +92,7 @@ class ContextParams:
     def get(self):
         vars = OrderedDict()
         for param in self.params:
-            value = self.__dict__['vars'][param.name].get()
+            value = self.__dict__["vars"][param.name].get()
             vars[param.name] = value
         return vars
 
@@ -103,29 +105,29 @@ class ContextParams:
             return None
         elif len(groups) == 1:
             return groups[0]
-        raise Exception('User {} in more groups: {}'.format(user.username, groups))
+        raise Exception("User {} in more groups: {}".format(user.username, groups))
 
     # this is run in context copy
     @staticmethod
     def run_in_context(*args, **kwargs):
         # set params in context copy
-        params = kwargs.pop('__context_params_to_set__')
+        params = kwargs.pop("__context_params_to_set__")
         cxpr.set(params)
-        function = kwargs.pop('__callable_to_run__')
+        function = kwargs.pop("__callable_to_run__")
         return function(*args, **kwargs)
 
     def run(self, params, function, *args, **kwargs):
         context = copy_context()
-        kwargs['__context_params_to_set__'] = params
-        kwargs['__callable_to_run__'] = function
+        kwargs["__context_params_to_set__"] = params
+        kwargs["__callable_to_run__"] = function
         return context.run(self.run_in_context, *args, **kwargs)
 
     def __str__(self):
         # vars = self.get_list()
         var_list = []
         for name, value in self.get().items():
-            var_list.append('{}={}'.format(name, value))
-        return '{}({})'.format(self.__class__.__name__, ', '.join(var_list))
+            var_list.append("{}={}".format(name, value))
+        return "{}({})".format(self.__class__.__name__, ", ".join(var_list))
 
     def __repr__(self):
         return self.__str__()
@@ -133,10 +135,13 @@ class ContextParams:
     def describe(self):
         vars = []
         for param in self.params:
-            value = self.__dict__['vars'][param.name].get()
-            vars.append('{}: {} ({}, type={}, default={})'.format(param.name, value, param.description, param.type,
-                                                                  param.default))
-        return '\n'.join(vars)
+            value = self.__dict__["vars"][param.name].get()
+            vars.append(
+                "{}: {} ({}, type={}, default={})".format(
+                    param.name, value, param.description, param.type, param.default
+                )
+            )
+        return "\n".join(vars)
 
 
 # Proxy pattern from
@@ -167,9 +172,9 @@ def get_context_params():
     global context_params
     if not context_params:
         # import project
-        if hasattr(settings, 'CONTEXT_PARAMS'):
-            path = settings.CONTEXT_PARAMS.split('.')
-            module = importlib.import_module('.'.join(path[:-1]))
+        if hasattr(settings, "CONTEXT_PARAMS"):
+            path = settings.CONTEXT_PARAMS.split(".")
+            module = importlib.import_module(".".join(path[:-1]))
             cls = getattr(module, path[-1])
             context_params = cls()
         else:
