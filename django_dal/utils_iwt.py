@@ -88,10 +88,10 @@ def encode_jwt(request, audience, issuer=None, expiration=30, extra_payload=None
 
     :param request:
     :param audience: required audience urn (generally the proxy host)
-    :param issuer: optional issuer urn, deafult is request.get_host()
+    :param issuer: optional issuer urn, default is request.get_host()
     :param expiration: jwt expration time in seconds, default 30
     :param extra_payload: optional dict of data to add in jwt payload
-    :param jwt_required: deafult False, denotes if JWT autentication is requierd,
+    :param jwt_required: default False, denotes if JWT autentication is requierd,
     :param debug: raise orginal expetion message when unable to encode JWT
     if True rasie ImproperlyConfigured if not private key configured in settings: DJANGO_DAL_RSA_KEYS.local.private
     :return:
