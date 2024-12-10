@@ -1,0 +1,16 @@
+stages:
+  - deploy-docs
+
+build-sphinx:
+  image: python:3.10-alpine
+  stage: deploy-docs
+  script:
+  - pip install -U sphinx sphinx-rtd-theme django
+  - sphinx-build -b html ./docs public
+  pages: true # specifies that this is a Pages job
+  artifacts:
+    paths:
+    - public
+  publish: public
+ # only:
+ #   - main

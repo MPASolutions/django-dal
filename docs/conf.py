@@ -15,8 +15,6 @@ import sys
 
 import sphinx_rtd_theme
 
-import django_dal
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -26,6 +24,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
 
 sys.path.insert(0, os.path.abspath(".."))
 
+import django_dal  # noqa: E402
 
 # -- General configuration -----------------------------------------------------
 
