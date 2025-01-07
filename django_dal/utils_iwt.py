@@ -89,11 +89,11 @@ def encode_jwt(request, audience, issuer=None, expiration=30, extra_payload=None
     :param request:
     :param audience: required audience urn (generally the proxy host)
     :param issuer: optional issuer urn, default is request.get_host()
-    :param expiration: jwt expration time in seconds, default 30
+    :param expiration: jwt explanation time in seconds, default 30
     :param extra_payload: optional dict of data to add in jwt payload
-    :param jwt_required: default False, denotes if JWT autentication is requierd,
-    :param debug: raise orginal expetion message when unable to encode JWT
-    if True rasie ImproperlyConfigured if not private key configured in settings: DJANGO_DAL_RSA_KEYS.local.private
+    :param jwt_required: default False, denotes if JWT authentication is required,
+    :param debug: raise original explanation message when unable to encode JWT
+    if True raise ImproperlyConfigured if not private key configured in settings: DJANGO_DAL_RSA_KEYS.local.private
     :return:
     """
     pem_bytes = read_file_or_str_bytes(getattr(settings, "DJANGO_DAL_RSA_KEYS", {}).get("local", {}).get("private"))
