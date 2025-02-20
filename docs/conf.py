@@ -13,6 +13,7 @@
 import os
 import sys
 
+# noinspection PyUnresolvedReferences
 import sphinx_rtd_theme
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
