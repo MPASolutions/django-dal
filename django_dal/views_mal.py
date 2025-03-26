@@ -51,7 +51,7 @@ class BaseSendFileView(View):
                             _found = True
 
         if not _found:
-            raise PermissionDenied("File not found or user has no enought permissions")
+            raise PermissionDenied("File not found or user has no enough permissions")
 
         return self.serve(filepath)
 
