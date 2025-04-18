@@ -15,7 +15,7 @@ else:
 
 test_1 = hasattr(models, "options")
 test_2 = hasattr(models.options, "DEFAULT_NAMES")
-test_3 = hasattr(models.options, "DEFAULT_NAMES")
+test_3 = "relations_limit" not in models.options.DEFAULT_NAMES
 
 if test_1 and test_2 and test_3:
     models.options.DEFAULT_NAMES += ("relations_limit",)
