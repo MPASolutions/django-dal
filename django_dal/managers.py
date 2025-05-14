@@ -52,16 +52,19 @@ class DALManager(Manager.from_queryset(DALQuerySet)):
         else:
             return self.get_queryset()
 
-    def get_filter(self):
+    def get_filter(self, relations_limit=None):
         qsets = Q()
 
-        if (
-            (self.model is not None)
-            and (hasattr(self.model._meta, "relations_limit") is True)
-            and (isinstance(self.model._meta.relations_limit, list) is True)
+        if (self.model is not None) and (
+            (
+                (hasattr(self.model._meta, "relations_limit") is True)
+                and (isinstance(self.model._meta.relations_limit, list) is True)
+            )
+            or (relations_limit is not None)
         ):
-
-            for relation_limit in self.model._meta.relations_limit:
+            if relations_limit is None:
+                relations_limit = self.model._meta.relations_limit
+            for relation_limit in relations_limit:
                 model = self._get_model(self.model, relation_limit)
 
                 if model is not None and hasattr(model.objects, "get_filter") and callable(model.objects.get_filter):
