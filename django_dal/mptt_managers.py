@@ -122,7 +122,7 @@ class DALTreeManager(models.Manager.from_queryset(DALTreeQuerySet)):
             queryset = queryset.filter(self.get_filter())
         return queryset
 
-    def get_filter(self):
+    def get_filter(self, relations_limit=None):
         qsets = Q()
 
         if hasattr(self.model._meta, "relations_limit") and isinstance(self.model._meta.relations_limit, list):
