@@ -1,8 +1,11 @@
 import importlib
+import json
 from collections import OrderedDict
 from contextvars import ContextVar, copy_context
+from hashlib import md5
 
 from django.conf import settings
+from django.db import models
 from django.utils.functional import LazyObject
 
 
@@ -96,6 +99,22 @@ class ContextParams:
             vars[param.name] = value
         return vars
 
+    def get_user(self):
+        """
+        If it has Django User defined get current user, AnonymousUser otherwise
+        Returns: Django User
+        """
+        from django.contrib.auth.models import AbstractUser, AnonymousUser
+
+        user = None
+        for param in self.params:
+            value = self.__dict__["vars"][param.name].get()
+            if issubclass(param.type, AbstractUser) and value is not None:
+                if user is not None:
+                    raise Exception("Cannot get cxpr user, multiple User params.")
+                user = value
+        return user if user else AnonymousUser()
+
     @staticmethod
     def get_user_group(user):
         if user is None:
@@ -132,16 +151,73 @@ class ContextParams:
     def __repr__(self):
         return self.__str__()
 
-    def describe(self):
-        vars = []
+    def get_checksum(self):
+        md = md5()
         for param in self.params:
             value = self.__dict__["vars"][param.name].get()
-            vars.append(
+            if isinstance(value, (int, str, type(None))):
+                string = str(value)
+            elif isinstance(value, models.Model):
+                string = str(value.pk)
+            else:
+                raise Exception("Cxpr checksum unsupported type: {}".format(type(value)))
+            md.update(string.encode("utf-8"))
+        return md.hexdigest()
+
+    def describe(self):
+        variables = []
+        for param in self.params:
+            value = self.__dict__["vars"][param.name].get()
+            variables.append(
                 "{}: {} ({}, type={}, default={})".format(
                     param.name, value, param.description, param.type, param.default
                 )
             )
-        return "\n".join(vars)
+
+        return "\n".join(variables)
+
+    @staticmethod
+    def get_class_path(klass):
+        """Return the full name of the given object using its module and qualified class names."""
+        # Ref: https://stackoverflow.com/a/66508248/
+        module_name, class_name = klass.__module__, klass.__qualname__
+        if module_name in (None, str.__class__.__module__):
+            return class_name
+        return module_name + "." + class_name
+
+    def get_values_json_str(self):
+        """
+        Returns:
+            JSON string which may be parsed by parse_values_json_str()
+        """
+        variables = []
+        for param in self.params:
+            value = self.__dict__["vars"][param.name].get()
+            if isinstance(value, models.Model):
+                value = value.pk
+            variables.append({"name": param.name, "value": value})
+        return json.dumps(variables, sort_keys=True)
+
+    @staticmethod
+    def get_class(class_path):
+        module_path, name = class_path.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        return getattr(module, name)
+
+    def set_values_json_str(self, json_str):
+        """
+        Returns:
+            Parse and set JSON string produced by get_values_json_str()
+        """
+        variables = json.loads(json_str)
+        values = {}
+        for variable in variables:
+            param = self._get_param(variable["name"])
+            value = variable["value"]
+            if value is not None and issubclass(param.type, models.Model):
+                value = param.type.objects.get(pk=value)
+            values[variable["name"]] = value
+        self.set(values)
 
 
 # Proxy pattern from

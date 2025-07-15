@@ -8,5 +8,7 @@ from django_dal.params import cxpr
 @user_passes_test(lambda u: u.is_superuser)
 def cxpr_info(request):
     response = "Context parameters:\n{}".format(cxpr.describe())
+    response += "\n\nJSON:\n" + cxpr.get_values_json_str()
+    response += "\n\nChecksum:\n" + cxpr.get_checksum()
 
     return HttpResponse(response, content_type="text/plain")
