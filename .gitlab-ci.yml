@@ -2,7 +2,7 @@ stages:
   - deploy-docs
 
 build-sphinx:
-  image: python:3.10-alpine
+  image: python:3.12-alpine
   stage: deploy-docs
   script:
   - pip install -U sphinx sphinx-rtd-theme django
