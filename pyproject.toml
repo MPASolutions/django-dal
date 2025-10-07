@@ -1,3 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-dal"
+dynamic = ["version"]
+description = ""
+authors = [
+    {name = "MPA Solutions", email = "info@mpasol.it"},
+]
+license = {text = "GNU GPLv3 License"}
+readme = "README.rst"
+requires-python = ">=3.12"
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+
+dependencies = [
+    {file = "requirements.txt"},
+]
+
+[project.urls]
+Homepage = "https://github.com/MPASolutions/django-dal"
+
+[tool.setuptools]
+include-package-data = true
+packages = ["find:"]
+exclude-packages = ["tests"]
+
+[tool.setuptools.dynamic]
+version = {attr = "django_dal.__init__.__version__"}
+long-description = {file = ["README.rst", "CHANGELOG.rst"], content-type = "text/x-rst"}
+
+[tool.setuptools.scripts]
+publish = "scripts.publish:main"
+tag = "scripts.tag:main"
+
+
 [tool.isort]
 profile = "black"
 combine_as_imports = true
