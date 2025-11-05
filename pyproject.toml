@@ -39,12 +39,17 @@ Homepage = "https://github.com/MPASolutions/django-dal"
 
 [tool.setuptools]
 include-package-data = true
-packages = ["find:"]
 exclude-packages = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+exclude = []
+namespaces = false
 
 [tool.setuptools.dynamic]
 version = {attr = "django_dal.__init__.__version__"}
-long-description = {file = ["README.rst", "CHANGELOG.rst"], content-type = "text/x-rst"}
+# long-description = {file = ["README.rst", "CHANGELOG.rst"], content-type = "text/x-rst"}
 
 [tool.setuptools.scripts]
 publish = "scripts.publish:main"
