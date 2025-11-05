@@ -37,6 +37,10 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/MPASolutions/django-dal"
 
+[project.scripts]
+publish = "scripts.publish:main"
+tag = "scripts.tag:main"
+
 [tool.setuptools]
 include-package-data = true
 exclude-packages = ["tests"]
@@ -50,11 +54,6 @@ namespaces = false
 [tool.setuptools.dynamic]
 version = {attr = "django_dal.__init__.__version__"}
 # long-description = {file = ["README.rst", "CHANGELOG.rst"], content-type = "text/x-rst"}
-
-[tool.setuptools.scripts]
-publish = "scripts.publish:main"
-tag = "scripts.tag:main"
-
 
 [tool.isort]
 profile = "black"
