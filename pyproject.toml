@@ -26,7 +26,12 @@ classifiers = [
 ]
 
 dependencies = [
-    {file = "requirements.txt"},
+    "Django",
+    "django-mptt",
+]
+# Develop dependencies (optional)
+[project.optional-dependencies]
+dev = [
 ]
 
 [project.urls]
