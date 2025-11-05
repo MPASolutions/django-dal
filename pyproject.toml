@@ -43,12 +43,11 @@ tag = "scripts.tag:main"
 
 [tool.setuptools]
 include-package-data = true
-exclude-packages = ["tests"]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["*"]
-exclude = []
+exclude = ["tests*"]
 namespaces = false
 
 [tool.setuptools.dynamic]
